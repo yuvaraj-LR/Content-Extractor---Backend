@@ -6,19 +6,9 @@ const contentSchema = new mongoose.Schema(
             type: String, 
             required: [true, "Public url is required."]
         }, 
-        title: {
-            type: String
-        }, 
-        summary: {
-            type: String
+        extractedContent: {
+            type: Object,
         },
-        keyPoints: [
-            {
-                points: {
-                    type: String
-                }
-            }
-        ],
         createdAt: {
             type: Date,
             default: Date.now(),
