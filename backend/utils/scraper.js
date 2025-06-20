@@ -1,79 +1,59 @@
-import puppeteer from "puppeteer";
+import axios from "axios";
+import * as cheerio from "cheerio";
 
-export const scrapeWithPuppeteer = async (url) => {
-  let browser;
+export const scrapeWithCheerio = async (url) => {
   try {
-    browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
-    });
-    
-    const page = await browser.newPage();
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
-    
-    await page.goto(url, { 
-      waitUntil: 'networkidle2',
-      timeout: 30000 
+    const response = await axios.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      },
+      timeout: 15000
     });
 
-    // Extract content
-    const content = await page.evaluate(() => {
-      // Remove script and style elements
-      const scripts = document.querySelectorAll('script, style, nav, footer, header, aside');
-      scripts.forEach(el => el.remove());
+    const $ = cheerio.load(response.data);
 
-      // Try to find main content areas
-      const contentSelectors = [
-        'article',
-        '[role="main"]',
-        '.content',
-        '.post-content',
-        '.entry-content',
-        '.article-content',
-        'main',
-        '.container'
-      ];
+    // Remove unwanted elements
+    $('script, style, nav, footer, header, aside, .advertisement').remove();
 
-      let mainContent = '';
-      let title = '';
+    // Extract title
+    let title = $('h1').first().text().trim() || 
+                $('title').text().trim() || 
+                $('meta[property="og:title"]').attr('content') || '';
 
-      // Extract title
-      title = document.querySelector('h1')?.textContent?.trim() || 
-              document.querySelector('title')?.textContent?.trim() || '';
+    // Extract main content
+    const contentSelectors = [
+      'article',
+      '[role="main"]',
+      '.content',
+      '.post-content',
+      '.entry-content',
+      '.article-content',
+      'main'
+    ];
 
-      // Try to find main content
-      for (const selector of contentSelectors) {
-        const element = document.querySelector(selector);
-        if (element) {
-          mainContent = element.textContent?.trim();
-          if (mainContent && mainContent.length > 200) {
-            break;
-          }
-        }
+    let content = '';
+    for (const selector of contentSelectors) {
+      const element = $(selector);
+      if (element.length && element.text().trim().length > 200) {
+        content = element.text().trim();
+        break;
       }
-
-      // Fallback: get all paragraph text
-      if (!mainContent || mainContent.length < 200) {
-        const paragraphs = Array.from(document.querySelectorAll('p'))
-          .map(p => p.textContent?.trim())
-          .filter(text => text && text.length > 50)
-          .join(' ');
-        mainContent = paragraphs;
-      }
-
-      return {
-        title: title,
-        content: mainContent,
-        url: window.location.href
-      };
-    });
-
-    return content;
-  } catch (error) {
-    throw new Error(`Scraping failed: ${error.message}`);
-  } finally {
-    if (browser) {
-      await browser.close();
     }
+
+    // Fallback: collect paragraph text
+    if (!content || content.length < 200) {
+      content = $('p').map((i, el) => $(el).text().trim())
+        .get()
+        .filter(text => text.length > 50)
+        .join(' ');
+    }
+
+    return {
+      title: title,
+      content: content,
+      url: url
+    };
+  } catch (error) {
+    throw new Error(`Cheerio scraping failed: ${error.message}`);
   }
-}
+};
