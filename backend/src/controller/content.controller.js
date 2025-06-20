@@ -1,5 +1,5 @@
 import { processWithGemini } from "../../utils/aiServices.js";
-import { scrapeWithPuppeteer } from "../../utils/scraper.js";
+import { scrapeWithCheerio } from "../../utils/scraper.js";
 import { addContentRepo, getAllContentRepo } from "../model/content.repo.js";
 
 export const getContent = async (req, res) => {
@@ -39,7 +39,7 @@ export const addContent = async (req, res) => {
     console.log('Starting content extraction for:', url);
 
     // Step 1: Scrape the content
-    const extractedData = await scrapeWithPuppeteer(url);
+    const extractedData = await scrapeWithCheerio(url);
     
     if (!extractedData.content || extractedData.content.length < 100) {
       return res.status(400).json({
