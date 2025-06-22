@@ -1,11 +1,14 @@
 import dotenv from 'dotenv';
 dotenv.config();
 import express from "express";
+import cors from "cors";
 import loggerMiddleware from './middleware/logger.middleware.js';
 import contentRouter from './src/routes/content.routes.js';
 
 const app = express();
 app.use(express.json());
+
+app.use(cors());
 
 // Added logger middleware to check logs.
 app.use(loggerMiddleware);

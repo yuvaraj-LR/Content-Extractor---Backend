@@ -11,3 +11,7 @@ export const getAllContentRepo = async () => {
 export const getContentByIdRepo = async (_id) => {
     return await ContentModel.findById(_id);
 };
+
+export const getContentByUrlRepo = async (url) => {
+    return await ContentModel.findOne({ url });
+};

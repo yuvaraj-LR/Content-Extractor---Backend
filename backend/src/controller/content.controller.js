@@ -1,6 +1,6 @@
 import { processWithGemini } from "../../utils/aiServices.js";
 import { scrapeWithCheerio } from "../../utils/scraper.js";
-import { addContentRepo, getAllContentRepo } from "../model/content.repo.js";
+import { addContentRepo, getAllContentRepo, getContentByUrlRepo } from "../model/content.repo.js";
 
 export const getContent = async (req, res) => {
     try {
@@ -33,6 +33,16 @@ export const addContent = async (req, res) => {
       return res.status(400).json({
         status: false,
         message: 'Invalid URL format'
+      });
+    }
+
+    // Check in DB, if the Url is already there. 
+    const existingData = await getContentByUrlRepo(url);
+    if (existingData) {
+      return res.status(200).json({
+        status: true,
+        message: "URL already processed",
+        data: existingData
       });
     }
 
