@@ -1,6 +1,6 @@
 import { processWithGemini } from "../../utils/aiServices.js";
 import { scrapeWithCheerio } from "../../utils/scraper.js";
-import { addContentRepo, getAllContentRepo, getContentByUrlRepo } from "../model/content.repo.js";
+import { addContentRepo, deleteContentRepo, getAllContentRepo, getContentByUrlRepo } from "../model/content.repo.js";
 
 export const getContent = async (req, res) => {
     try {
@@ -38,11 +38,16 @@ export const addContent = async (req, res) => {
 
     // Check in DB, if the Url is already there. 
     const existingData = await getContentByUrlRepo(url);
+    
     if (existingData) {
       return res.status(200).json({
         status: true,
         message: "URL already processed",
-        data: existingData
+        extractedData: {
+          title: existingData.extractedContent.title,
+          summary: existingData.extractedContent.summary,
+          keypoints: existingData.extractedContent.keypoints,
+        }
       });
     }
 
@@ -54,7 +59,7 @@ export const addContent = async (req, res) => {
     if (!extractedData.content || extractedData.content.length < 100) {
       return res.status(400).json({
         status: false,
-        message: 'Insufficient content extracted from the URL'
+        message: 'Insufficient content extracted from the URL. Please try again with different URL.'
       });
     }
 
@@ -70,15 +75,18 @@ export const addContent = async (req, res) => {
     }
 
     await addContentRepo(newData);
+
+    const data = await getAllContentRepo();
     
     // Step 4: Return the processed data
     return res.status(200).json({
       status: true,
-      data: {
+      addedData: {
         url: url,
         extractedAt: new Date().toISOString(),
         ...aiData
-      }
+      },
+      data
     });
 
   } catch (error) {
@@ -90,3 +98,27 @@ export const addContent = async (req, res) => {
   }
 };
 
+export const deleteContent = async (req, res) => {
+  try {
+    const { id } = req.body;
+    console.log(id, "ID");
+
+    if(!id) {
+      return res.status(400).json({
+        status: false,
+        message: 'Id should not be empty'
+      });
+    }
+    
+    await deleteContentRepo(id);
+    const data = await getAllContentRepo();
+
+    return res.status(200).json({status: true, msg: "Deleted Successfully.", data })
+  } catch (error) {
+    console.error("Content extraction error:", error);
+    return res.status(500).json({
+      status: false,
+      message: error.message || 'An error occurred during content extraction'
+    });
+  }
+}

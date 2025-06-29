@@ -15,3 +15,7 @@ export const getContentByIdRepo = async (_id) => {
 export const getContentByUrlRepo = async (url) => {
     return await ContentModel.findOne({ url });
 };
+
+export const deleteContentRepo = async( _id) => {
+    return await ContentModel.deleteOne({_id});
+}

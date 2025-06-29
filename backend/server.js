@@ -3,6 +3,10 @@ import app from "./index.js";
 
 const port = process.env.PORT || 8080;
 
+const mongoDBurl = process.env.MONGO_DB_URL;
+console.log(mongoDBurl, "DBB");
+
+
 // App listener.
 app.listen(port, (err) => {
     if(!err) {
