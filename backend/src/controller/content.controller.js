@@ -38,7 +38,8 @@ export const addContent = async (req, res) => {
 
     // Check in DB, if the Url is already there. 
     const existingData = await getContentByUrlRepo(url);
-    
+    const data = await getAllContentRepo();
+
     if (existingData) {
       return res.status(200).json({
         status: true,
@@ -47,7 +48,8 @@ export const addContent = async (req, res) => {
           title: existingData.extractedContent.title,
           summary: existingData.extractedContent.summary,
           keypoints: existingData.extractedContent.keypoints,
-        }
+        },
+        data
       });
     }
 
@@ -75,8 +77,6 @@ export const addContent = async (req, res) => {
     }
 
     await addContentRepo(newData);
-
-    const data = await getAllContentRepo();
     
     // Step 4: Return the processed data
     return res.status(200).json({
