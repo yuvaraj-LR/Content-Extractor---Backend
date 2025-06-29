@@ -19,3 +19,9 @@ export const getContentByUrlRepo = async (url) => {
 export const deleteContentRepo = async( _id) => {
     return await ContentModel.deleteOne({_id});
 }
+
+export const searchContentByTitleRepo = async (searchTerm) => {
+    return await ContentModel.find({
+        "extractedContent.title": { $regex: searchTerm, $options: "i" }
+    });
+};

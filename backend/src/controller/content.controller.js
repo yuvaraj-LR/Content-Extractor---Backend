@@ -1,6 +1,6 @@
 import { processWithGemini } from "../../utils/aiServices.js";
 import { scrapeWithCheerio } from "../../utils/scraper.js";
-import { addContentRepo, deleteContentRepo, getAllContentRepo, getContentByUrlRepo } from "../model/content.repo.js";
+import { addContentRepo, deleteContentRepo, getAllContentRepo, getContentByUrlRepo, searchContentByTitleRepo } from "../model/content.repo.js";
 
 export const getContent = async (req, res) => {
     try {
@@ -115,10 +115,30 @@ export const deleteContent = async (req, res) => {
 
     return res.status(200).json({status: true, msg: "Deleted Successfully.", data })
   } catch (error) {
-    console.error("Content extraction error:", error);
+    console.error("Content Deletion error:", error);
     return res.status(500).json({
       status: false,
-      message: error.message || 'An error occurred during content extraction'
+      message: error.message || 'An error occurred during Delete Item'
     });
   }
 }
+
+export const searchContent = async (req, res) => {
+  try {
+    const { query } = req.query;
+
+    if (!query || query.trim() === "") {
+      return res.status(400).json({ status: false, message: "Search query is required." });
+    }
+
+    const result = await searchContentByTitleRepo(query);
+
+    return res.status(200).json({ status: true, data: result });
+  } catch (error) {
+    console.error("Search error:", error);
+    return res.status(500).json({
+      status: false,
+      message: error.message || "Error occurred during search",
+    });
+  }
+};
